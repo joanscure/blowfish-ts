@@ -1,127 +1,136 @@
-(function (global) {
-  var crypto = {};
-  var cache = [];
-  var buildFn = () => {};
-
-  crypto.cipherModes = {
-    ECB: 0,
-    CBC: 1,
-    PCBC: 2,
-    CFB: 3,
-    OFB: 4,
-    CTR: 5,
-  };
-  crypto.outputTypes = {
-    Base64: 0,
-    Hex: 1,
-    String: 2,
-    Raw: 3,
-  };
-
-  var base64 = {};
-  var p = "=";
-  var tab = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
-
-  base64.encode = function (ba) {
-    var s = [],
-      l = ba.length;
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.TYPE = exports.MODE = void 0;
+var cache = {};
+var buildFn = function () {
+    var value = [];
+    for (var _i = 0; _i < arguments.length; _i++) {
+        value[_i] = arguments[_i];
+    }
+    return value;
+};
+var MODE;
+(function (MODE) {
+    MODE[MODE["ECB"] = 0] = "ECB";
+    MODE[MODE["CBC"] = 1] = "CBC";
+    MODE[MODE["PCBC"] = 2] = "PCBC";
+    MODE[MODE["CFB"] = 3] = "CFB";
+    MODE[MODE["OFB"] = 4] = "OFB";
+    MODE[MODE["CTR"] = 5] = "CTR";
+})(MODE || (exports.MODE = MODE = {}));
+var TYPE;
+(function (TYPE) {
+    TYPE[TYPE["BASE64"] = 0] = "BASE64";
+    TYPE[TYPE["HEX"] = 1] = "HEX";
+    TYPE[TYPE["STRING"] = 2] = "STRING";
+    TYPE[TYPE["RAW"] = 3] = "RAW";
+})(TYPE || (exports.TYPE = TYPE = {}));
+var base64 = {
+    encode: function (value) { return value; },
+    decode: function (value) { return value; },
+};
+var p = "=";
+var tab = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+base64.encode = function (ba) {
+    var s = [], l = ba.length;
     var rm = l % 3;
     var x = l - rm;
-    let i = 0;
-    for (; i < x; ) {
-      let t = (ba[i++] << 16) | (ba[i++] << 8) | ba[i++];
-      s.push(tab.charAt((t >>> 18) & 0x3f));
-      s.push(tab.charAt((t >>> 12) & 0x3f));
-      s.push(tab.charAt((t >>> 6) & 0x3f));
-      s.push(tab.charAt(t & 0x3f));
-    }
-    switch (rm) {
-      case 2: {
-        let t = (ba[i++] << 16) | (ba[i++] << 8);
+    var i = 0;
+    for (; i < x;) {
+        var t = (ba[i++] << 16) | (ba[i++] << 8) | ba[i++];
         s.push(tab.charAt((t >>> 18) & 0x3f));
         s.push(tab.charAt((t >>> 12) & 0x3f));
         s.push(tab.charAt((t >>> 6) & 0x3f));
-        s.push(p);
-        break;
-      }
-      case 1: {
-        let t = ba[i++] << 16;
-        s.push(tab.charAt((t >>> 18) & 0x3f));
-        s.push(tab.charAt((t >>> 12) & 0x3f));
-        s.push(p);
-        s.push(p);
-        break;
-      }
-      default:
-        break;
+        s.push(tab.charAt(t & 0x3f));
+    }
+    switch (rm) {
+        case 2: {
+            var t = (ba[i++] << 16) | (ba[i++] << 8);
+            s.push(tab.charAt((t >>> 18) & 0x3f));
+            s.push(tab.charAt((t >>> 12) & 0x3f));
+            s.push(tab.charAt((t >>> 6) & 0x3f));
+            s.push(p);
+            break;
+        }
+        case 1: {
+            var t = ba[i++] << 16;
+            s.push(tab.charAt((t >>> 18) & 0x3f));
+            s.push(tab.charAt((t >>> 12) & 0x3f));
+            s.push(p);
+            s.push(p);
+            break;
+        }
+        default:
+            break;
     }
     return s.join("");
-  };
-
-  base64.decode = function (str) {
-    var s = str.split(""),
-      out = [];
+};
+base64.decode = function (str) {
+    var s = str.split(""), out = [];
     var l = s.length;
-    while (s[--l] === p) {}
-    for (var i = 0; i < l; ) {
-      var t = tab.indexOf(s[i++]) << 18;
-      if (i <= l) {
-        t |= tab.indexOf(s[i++]) << 12;
-      }
-      if (i <= l) {
-        t |= tab.indexOf(s[i++]) << 6;
-      }
-      if (i <= l) {
-        t |= tab.indexOf(s[i++]);
-      }
-      out.push((t >>> 16) & 0xff);
-      out.push((t >>> 8) & 0xff);
-      out.push(t & 0xff);
+    while (s[--l] === p) { }
+    for (var i = 0; i < l;) {
+        var t = tab.indexOf(s[i++]) << 18;
+        if (i <= l) {
+            t |= tab.indexOf(s[i++]) << 12;
+        }
+        if (i <= l) {
+            t |= tab.indexOf(s[i++]) << 6;
+        }
+        if (i <= l) {
+            t |= tab.indexOf(s[i++]);
+        }
+        out.push((t >>> 16) & 0xff);
+        out.push((t >>> 8) & 0xff);
+        out.push(t & 0xff);
     }
     while (out[out.length - 1] === 0) {
-      out.pop();
+        out.pop();
     }
     return out;
-  };
-
-  var lang = {};
-  lang.isString = function (it) {
+};
+var isString = function (it) {
     return typeof it == "string" || it instanceof String;
-  };
-
-  var arrayUtil = {};
-  arrayUtil.map = function (arr, callback, thisObject, Ctr) {
-    var i = 0,
-      l = (arr && arr.length) || 0,
-      out = new (Ctr || Array)(l);
-    if (l && typeof arr == "string") arr = arr.split("");
-    if (typeof callback == "string")
-      callback = cache[callback] || buildFn(callback);
-
+};
+var arrayUtil = {
+    map: function () {
+        var value = [];
+        for (var _i = 0; _i < arguments.length; _i++) {
+            value[_i] = arguments[_i];
+        }
+        return value;
+    },
+};
+arrayUtil.map = function (arr, callback, thisObject, Ctr) {
+    var i = 0, l = (arr && arr.length) || 0, out = new (Ctr || Array)(l);
+    if (l && typeof arr == "string")
+        arr = arr.split("");
+    if (typeof callback == "string") {
+        callback = cache[callback] || buildFn != null ? buildFn(callback) : null;
+    }
     if (thisObject) {
-      for (; i < l; ++i) {
-        out[i] = callback.call(thisObject, arr[i], i, arr);
-      }
-    } else {
-      for (; i < l; ++i) {
-        out[i] = callback(arr[i], i, arr);
-      }
+        for (; i < l; ++i) {
+            out[i] = callback.call(thisObject, arr[i], i, arr);
+        }
+    }
+    else {
+        for (; i < l; ++i) {
+            out[i] = callback(arr[i], i, arr);
+        }
     }
     return out;
-  };
-
-  crypto.Blowfish = new (function () {
-    var POW8 = Math.pow(2, 8);
-    var POW16 = Math.pow(2, 16);
-    var POW24 = Math.pow(2, 24);
-    var iv = null;
-    var boxes = {
-      p: [
+};
+var POW8 = Math.pow(2, 8);
+var POW16 = Math.pow(2, 16);
+var POW24 = Math.pow(2, 24);
+var iv = null;
+var boxes = {
+    p: [
         0x243f6a88, 0x85a308d3, 0x13198a2e, 0x03707344, 0xa4093822, 0x299f31d0,
         0x082efa98, 0xec4e6c89, 0x452821e6, 0x38d01377, 0xbe5466cf, 0x34e90c6c,
         0xc0ac29b7, 0xc97c50dd, 0x3f84d5b5, 0xb5470917, 0x9216d5d9, 0x8979fb1b,
-      ],
-      s0: [
+    ],
+    s0: [
         0xd1310ba6, 0x98dfb5ac, 0x2ffd72db, 0xd01adfb7, 0xb8e1afed, 0x6a267e96,
         0xba7c9045, 0xf12c7f99, 0x24a19947, 0xb3916cf7, 0x0801f2e2, 0x858efc16,
         0x636920d8, 0x71574e69, 0xa458fea3, 0xf4933d7e, 0x0d95748f, 0x728eb658,
@@ -165,8 +174,8 @@
         0xd60f573f, 0xbc9bc6e4, 0x2b60a476, 0x81e67400, 0x08ba6fb5, 0x571be91f,
         0xf296ec6b, 0x2a0dd915, 0xb6636521, 0xe7b9f9b6, 0xff34052e, 0xc5855664,
         0x53b02d5d, 0xa99f8fa1, 0x08ba4799, 0x6e85076a,
-      ],
-      s1: [
+    ],
+    s1: [
         0x4b7a70e9, 0xb5b32944, 0xdb75092e, 0xc4192623, 0xad6ea6b0, 0x49a7df7d,
         0x9cee60b8, 0x8fedb266, 0xecaa8c71, 0x699a17ff, 0x5664526c, 0xc2b19ee1,
         0x193602a5, 0x75094c29, 0xa0591340, 0xe4183a3e, 0x3f54989a, 0x5b429d65,
@@ -210,8 +219,8 @@
         0x9e447a2e, 0xc3453484, 0xfdd56705, 0x0e1e9ec9, 0xdb73dbd3, 0x105588cd,
         0x675fda79, 0xe3674340, 0xc5c43465, 0x713e38d8, 0x3d28f89e, 0xf16dff20,
         0x153e21e7, 0x8fb03d4a, 0xe6e39f2b, 0xdb83adf7,
-      ],
-      s2: [
+    ],
+    s2: [
         0xe93d5a68, 0x948140f7, 0xf64c261c, 0x94692934, 0x411520f7, 0x7602d4f7,
         0xbcf46b2e, 0xd4a20068, 0xd4082471, 0x3320f46a, 0x43b7d4b7, 0x500061af,
         0x1e39f62e, 0x97244546, 0x14214f74, 0xbf8b8840, 0x4d95fc1d, 0x96b591af,
@@ -255,8 +264,8 @@
         0xed545578, 0x08fca5b5, 0xd83d7cd3, 0x4dad0fc4, 0x1e50ef5e, 0xb161e6f8,
         0xa28514d9, 0x6c51133c, 0x6fd5c7e7, 0x56e14ec4, 0x362abfce, 0xddc6c837,
         0xd79a3234, 0x92638212, 0x670efa8e, 0x406000e0,
-      ],
-      s3: [
+    ],
+    s3: [
         0x3a39ce37, 0xd3faf5cf, 0xabc27737, 0x5ac52d1b, 0x5cb0679e, 0x4fa33742,
         0xd3822740, 0x99bc9bbe, 0xd5118e9d, 0xbf0f7315, 0xd62d1c7e, 0xc700c47b,
         0xb78c1b6b, 0x21a19045, 0xb26eb1be, 0x6a366eb4, 0x5748ab2f, 0xbc946e79,
@@ -300,370 +309,333 @@
         0x85cbfe4e, 0x8ae88dd8, 0x7aaaf9b0, 0x4cf9aa7e, 0x1948c25c, 0x02fb8a8c,
         0x01c36ae4, 0xd6ebe1f9, 0x90d4f869, 0xa65cdea0, 0x3f09252d, 0xc208e69f,
         0xb74e6132, 0xce77e25b, 0x578fdfe3, 0x3ac372e6,
-      ],
-    };
-    function xor(x, y) {
-      return (
-        (((x >> 0x10) ^ (y >> 0x10)) << 0x10) |
-        (((x & 0xffff) ^ (y & 0xffff)) & 0xffff)
-      );
-    }
-
-    function $(v, box) {
-      var d = box.s3[v & 0xff];
-      v >>= 8;
-      var c = box.s2[v & 0xff];
-      v >>= 8;
-      var b = box.s1[v & 0xff];
-      v >>= 8;
-      var a = box.s0[v & 0xff];
-
-      var r =
-        (((a >> 0x10) +
-          (b >> 0x10) +
-          (((a & 0xffff) + (b & 0xffff)) >> 0x10)) <<
-          0x10) |
+    ],
+};
+function xor(x, y) {
+    return ((((x >> 0x10) ^ (y >> 0x10)) << 0x10) |
+        (((x & 0xffff) ^ (y & 0xffff)) & 0xffff));
+}
+function $(v, box) {
+    var d = box.s3[v & 0xff];
+    v >>= 8;
+    var c = box.s2[v & 0xff];
+    v >>= 8;
+    var b = box.s1[v & 0xff];
+    v >>= 8;
+    var a = box.s0[v & 0xff];
+    var r = (((a >> 0x10) + (b >> 0x10) + (((a & 0xffff) + (b & 0xffff)) >> 0x10)) <<
+        0x10) |
         (((a & 0xffff) + (b & 0xffff)) & 0xffff);
-      r =
+    r =
         (((r >> 0x10) ^ (c >> 0x10)) << 0x10) |
-        (((r & 0xffff) ^ (c & 0xffff)) & 0xffff);
-      return (
-        (((r >> 0x10) +
-          (d >> 0x10) +
-          (((r & 0xffff) + (d & 0xffff)) >> 0x10)) <<
-          0x10) |
-        (((r & 0xffff) + (d & 0xffff)) & 0xffff)
-      );
-    }
-    function eb(o, box) {
-      var l = o.left;
-      var r = o.right;
-      l = xor(l, box.p[0]);
-      r = xor(r, xor($(l, box), box.p[1]));
-      l = xor(l, xor($(r, box), box.p[2]));
-      r = xor(r, xor($(l, box), box.p[3]));
-      l = xor(l, xor($(r, box), box.p[4]));
-      r = xor(r, xor($(l, box), box.p[5]));
-      l = xor(l, xor($(r, box), box.p[6]));
-      r = xor(r, xor($(l, box), box.p[7]));
-      l = xor(l, xor($(r, box), box.p[8]));
-      r = xor(r, xor($(l, box), box.p[9]));
-      l = xor(l, xor($(r, box), box.p[10]));
-      r = xor(r, xor($(l, box), box.p[11]));
-      l = xor(l, xor($(r, box), box.p[12]));
-      r = xor(r, xor($(l, box), box.p[13]));
-      l = xor(l, xor($(r, box), box.p[14]));
-      r = xor(r, xor($(l, box), box.p[15]));
-      l = xor(l, xor($(r, box), box.p[16]));
-      o.right = l;
-      o.left = xor(r, box.p[17]);
-    }
-
-    function db(o, box) {
-      var l = o.left;
-      var r = o.right;
-      l = xor(l, box.p[17]);
-      r = xor(r, xor($(l, box), box.p[16]));
-      l = xor(l, xor($(r, box), box.p[15]));
-      r = xor(r, xor($(l, box), box.p[14]));
-      l = xor(l, xor($(r, box), box.p[13]));
-      r = xor(r, xor($(l, box), box.p[12]));
-      l = xor(l, xor($(r, box), box.p[11]));
-      r = xor(r, xor($(l, box), box.p[10]));
-      l = xor(l, xor($(r, box), box.p[9]));
-      r = xor(r, xor($(l, box), box.p[8]));
-      l = xor(l, xor($(r, box), box.p[7]));
-      r = xor(r, xor($(l, box), box.p[6]));
-      l = xor(l, xor($(r, box), box.p[5]));
-      r = xor(r, xor($(l, box), box.p[4]));
-      l = xor(l, xor($(r, box), box.p[3]));
-      r = xor(r, xor($(l, box), box.p[2]));
-      l = xor(l, xor($(r, box), box.p[1]));
-      o.right = l;
-      o.left = xor(r, box.p[0]);
-    }
-
-    function init(key) {
-      var k = key;
-      if (lang.isString(k)) {
+            (((r & 0xffff) ^ (c & 0xffff)) & 0xffff);
+    return ((((r >> 0x10) + (d >> 0x10) + (((r & 0xffff) + (d & 0xffff)) >> 0x10)) <<
+        0x10) |
+        (((r & 0xffff) + (d & 0xffff)) & 0xffff));
+}
+function eb(o, box) {
+    var l = o.left;
+    var r = o.right;
+    l = xor(l, box.p[0]);
+    r = xor(r, xor($(l, box), box.p[1]));
+    l = xor(l, xor($(r, box), box.p[2]));
+    r = xor(r, xor($(l, box), box.p[3]));
+    l = xor(l, xor($(r, box), box.p[4]));
+    r = xor(r, xor($(l, box), box.p[5]));
+    l = xor(l, xor($(r, box), box.p[6]));
+    r = xor(r, xor($(l, box), box.p[7]));
+    l = xor(l, xor($(r, box), box.p[8]));
+    r = xor(r, xor($(l, box), box.p[9]));
+    l = xor(l, xor($(r, box), box.p[10]));
+    r = xor(r, xor($(l, box), box.p[11]));
+    l = xor(l, xor($(r, box), box.p[12]));
+    r = xor(r, xor($(l, box), box.p[13]));
+    l = xor(l, xor($(r, box), box.p[14]));
+    r = xor(r, xor($(l, box), box.p[15]));
+    l = xor(l, xor($(r, box), box.p[16]));
+    o.right = l;
+    o.left = xor(r, box.p[17]);
+}
+function db(o, box) {
+    var l = o.left;
+    var r = o.right;
+    l = xor(l, box.p[17]);
+    r = xor(r, xor($(l, box), box.p[16]));
+    l = xor(l, xor($(r, box), box.p[15]));
+    r = xor(r, xor($(l, box), box.p[14]));
+    l = xor(l, xor($(r, box), box.p[13]));
+    r = xor(r, xor($(l, box), box.p[12]));
+    l = xor(l, xor($(r, box), box.p[11]));
+    r = xor(r, xor($(l, box), box.p[10]));
+    l = xor(l, xor($(r, box), box.p[9]));
+    r = xor(r, xor($(l, box), box.p[8]));
+    l = xor(l, xor($(r, box), box.p[7]));
+    r = xor(r, xor($(l, box), box.p[6]));
+    l = xor(l, xor($(r, box), box.p[5]));
+    r = xor(r, xor($(l, box), box.p[4]));
+    l = xor(l, xor($(r, box), box.p[3]));
+    r = xor(r, xor($(l, box), box.p[2]));
+    l = xor(l, xor($(r, box), box.p[1]));
+    o.right = l;
+    o.left = xor(r, box.p[0]);
+}
+function init(key) {
+    var k = key;
+    if (isString(k)) {
         k = arrayUtil.map(k.split(""), function (item) {
-          return item.charCodeAt(0) & 0xff;
+            return item.charCodeAt(0) & 0xff;
         });
-      }
-
-      var pos = 0,
-        data = 0,
-        res = { left: 0, right: 0 },
-        i,
-        j,
-        l;
-      var box = {
+    }
+    var pos = 0, data = 0, res = { left: 0, right: 0 }, i, j, l;
+    var box = {
         p: arrayUtil.map(boxes.p.slice(0), function (item) {
-          var l = k.length,
-            j;
-          for (j = 0; j < 4; j++) {
-            data = (data * POW8) | k[pos++ % l];
-          }
-          return (
-            (((item >> 0x10) ^ (data >> 0x10)) << 0x10) |
-            (((item & 0xffff) ^ (data & 0xffff)) & 0xffff)
-          );
+            var l = k.length, j;
+            for (j = 0; j < 4; j++) {
+                data = (data * POW8) | k[pos++ % l];
+            }
+            return ((((item >> 0x10) ^ (data >> 0x10)) << 0x10) |
+                (((item & 0xffff) ^ (data & 0xffff)) & 0xffff));
         }),
         s0: boxes.s0.slice(0),
         s1: boxes.s1.slice(0),
         s2: boxes.s2.slice(0),
         s3: boxes.s3.slice(0),
-      };
-
-      for (i = 0, l = box.p.length; i < l; ) {
+    };
+    for (i = 0, l = box.p.length; i < l;) {
         eb(res, box);
         box.p[i++] = res.left;
         box.p[i++] = res.right;
-      }
-      for (i = 0; i < 4; i++) {
-        for (j = 0, l = box["s" + i].length; j < l; ) {
-          eb(res, box);
-          box["s" + i][j++] = res.left;
-          box["s" + i][j++] = res.right;
-        }
-      }
-      return box;
     }
-
-    this.getIV = function (outputType) {
-      var out = outputType || crypto.outputTypes.Base64;
-      switch (out) {
-        case crypto.outputTypes.Hex: {
-          return arrayUtil
-            .map(iv, function (item) {
-              return (item <= 0xf ? "0" : "") + item.toString(16);
-            })
-            .join("");
+    for (i = 0; i < 4; i++) {
+        for (j = 0, l = box["s" + i].length; j < l;) {
+            eb(res, box);
+            box["s" + i][j++] = res.left;
+            box["s" + i][j++] = res.right;
         }
-        case crypto.outputTypes.String: {
-          return iv.join("");
+    }
+    return box;
+}
+var Blowfish = {
+    //encrypt: (
+    //plaintext: string,
+    //key: string,
+    //ao?: { cipherMode: MODE; outputType: TYPE }
+    //) => any,
+    //decrypt: (
+    //plaintext: string,
+    //key: string,
+    //ao?: { cipherMode: MODE; outputType: TYPE }
+    //) => any,
+    getIV: function (outputType) {
+        var out = outputType || TYPE.BASE64;
+        switch (out) {
+            case TYPE.HEX: {
+                return arrayUtil
+                    .map(iv, function (item) {
+                    return (item <= 0xf ? "0" : "") + item.toString(16);
+                })
+                    .join("");
+            }
+            case TYPE.STRING: {
+                return iv.join("");
+            }
+            case TYPE.RAW: {
+                return iv;
+            }
+            default: {
+                return base64.encode(iv);
+            }
         }
-        case crypto.outputTypes.Raw: {
-          return iv;
+    },
+    setIV: function (data, inputType) {
+        var ip = inputType || TYPE.BASE64;
+        var ba = null;
+        switch (ip) {
+            case TYPE.STRING: {
+                ba = arrayUtil.map(data.split(""), function (item) {
+                    return item.charCodeAt(0);
+                });
+                break;
+            }
+            case TYPE.HEX: {
+                ba = [];
+                for (var i = 0, l = data.length - 1; i < l; i += 2) {
+                    ba.push(parseInt(data.substr(i, 2), 16));
+                }
+                break;
+            }
+            case TYPE.RAW: {
+                ba = data;
+                break;
+            }
+            default: {
+                ba = base64.decode(data);
+                break;
+            }
         }
-        default: {
-          return base64.encode(iv);
+        iv = {};
+        iv.left = (ba[0] * POW24) | (ba[1] * POW16) | (ba[2] * POW8) | ba[3];
+        iv.right = (ba[4] * POW24) | (ba[5] * POW16) | (ba[6] * POW8) | ba[7];
+    },
+    encrypt: function (plaintext, key, ao) {
+        var out = TYPE.BASE64;
+        var mode = MODE.ECB;
+        if (ao) {
+            if (ao.outputType)
+                out = ao.outputType;
+            if (ao.cipherMode)
+                mode = ao.cipherMode;
         }
-      }
-    };
-
-    this.setIV = function (data, inputType) {
-      var ip = inputType || crypto.outputTypes.Base64;
-      var ba = null;
-      switch (ip) {
-        case crypto.outputTypes.String: {
-          ba = arrayUtil.map(data.split(""), function (item) {
-            return item.charCodeAt(0);
-          });
-          break;
+        var bx = init(key), padding = 8 - (plaintext.length & 7);
+        for (var i = 0; i < padding; i++) {
+            plaintext += String.fromCharCode(padding);
         }
-        case crypto.outputTypes.Hex: {
-          ba = [];
-          for (var i = 0, l = data.length - 1; i < l; i += 2) {
-            ba.push(parseInt(data.substr(i, 2), 16));
-          }
-          break;
+        var cipher = [], count = plaintext.length >> 3, pos = 0, o = {
+            left: 0,
+            right: 0,
+        }, isCBC = mode === MODE.CBC;
+        var vector = { left: iv.left || null, right: iv.right || null };
+        for (var ic = 0; ic < count; ic++) {
+            o.left =
+                (plaintext.charCodeAt(pos) * POW24) |
+                    (plaintext.charCodeAt(pos + 1) * POW16) |
+                    (plaintext.charCodeAt(pos + 2) * POW8) |
+                    plaintext.charCodeAt(pos + 3);
+            o.right =
+                (plaintext.charCodeAt(pos + 4) * POW24) |
+                    (plaintext.charCodeAt(pos + 5) * POW16) |
+                    (plaintext.charCodeAt(pos + 6) * POW8) |
+                    plaintext.charCodeAt(pos + 7);
+            if (isCBC) {
+                o.left =
+                    (((o.left >> 0x10) ^ (vector.left >> 0x10)) << 0x10) |
+                        (((o.left & 0xffff) ^ (vector.left & 0xffff)) & 0xffff);
+                o.right =
+                    (((o.right >> 0x10) ^ (vector.right >> 0x10)) << 0x10) |
+                        (((o.right & 0xffff) ^ (vector.right & 0xffff)) & 0xffff);
+            }
+            eb(o, bx);
+            if (isCBC) {
+                vector.left = o.left;
+                vector.right = o.right;
+            }
+            cipher.push((o.left >> 24) & 0xff);
+            cipher.push((o.left >> 16) & 0xff);
+            cipher.push((o.left >> 8) & 0xff);
+            cipher.push(o.left & 0xff);
+            cipher.push((o.right >> 24) & 0xff);
+            cipher.push((o.right >> 16) & 0xff);
+            cipher.push((o.right >> 8) & 0xff);
+            cipher.push(o.right & 0xff);
+            pos += 8;
         }
-        case crypto.outputTypes.Raw: {
-          ba = data;
-          break;
+        switch (out) {
+            case TYPE.HEX: {
+                return arrayUtil
+                    .map(cipher, function (item) {
+                    return (item <= 0xf ? "0" : "") + item.toString(16);
+                })
+                    .join("");
+            }
+            case TYPE.STRING: {
+                return cipher.join("");
+            }
+            case TYPE.RAW: {
+                return cipher;
+            }
+            default: {
+                return base64.encode(cipher);
+            }
         }
-        default: {
-          ba = base64.decode(data);
-          break;
+    },
+    decrypt: function (ciphertext, key, ao) {
+        var left = 0;
+        var right = 0;
+        var ip = TYPE.BASE64;
+        var mode = MODE.ECB;
+        if (ao) {
+            if (ao.outputType)
+                ip = ao.outputType;
+            if (ao.cipherMode)
+                mode = ao.cipherMode;
         }
-      }
-      iv = {};
-      iv.left = (ba[0] * POW24) | (ba[1] * POW16) | (ba[2] * POW8) | ba[3];
-      iv.right = (ba[4] * POW24) | (ba[5] * POW16) | (ba[6] * POW8) | ba[7];
-    };
-
-    this.encrypt = function (plaintext, key, ao) {
-      var out = crypto.outputTypes.Base64;
-      var mode = crypto.cipherModes.ECB;
-      if (ao) {
-        if (ao.outputType) out = ao.outputType;
-        if (ao.cipherMode) mode = ao.cipherMode;
-      }
-
-      var bx = init(key),
-        padding = 8 - (plaintext.length & 7);
-      for (var i = 0; i < padding; i++) {
-        plaintext += String.fromCharCode(padding);
-      }
-
-      var cipher = [],
-        count = plaintext.length >> 3,
-        pos = 0,
-        o = {},
-        isCBC = mode === crypto.cipherModes.CBC;
-      var vector = { left: iv.left || null, right: iv.right || null };
-      for (let ic = 0; ic < count; ic++) {
-        o.left =
-          (plaintext.charCodeAt(pos) * POW24) |
-          (plaintext.charCodeAt(pos + 1) * POW16) |
-          (plaintext.charCodeAt(pos + 2) * POW8) |
-          plaintext.charCodeAt(pos + 3);
-        o.right =
-          (plaintext.charCodeAt(pos + 4) * POW24) |
-          (plaintext.charCodeAt(pos + 5) * POW16) |
-          (plaintext.charCodeAt(pos + 6) * POW8) |
-          plaintext.charCodeAt(pos + 7);
-
-        if (isCBC) {
-          o.left =
-            (((o.left >> 0x10) ^ (vector.left >> 0x10)) << 0x10) |
-            (((o.left & 0xffff) ^ (vector.left & 0xffff)) & 0xffff);
-          o.right =
-            (((o.right >> 0x10) ^ (vector.right >> 0x10)) << 0x10) |
-            (((o.right & 0xffff) ^ (vector.right & 0xffff)) & 0xffff);
+        var bx = init(key);
+        var pt = [];
+        var c = null;
+        switch (ip) {
+            case TYPE.HEX: {
+                c = [];
+                for (var i = 0, l = ciphertext.length - 1; i < l; i += 2) {
+                    c.push(parseInt(ciphertext.substr(i, 2), 16));
+                }
+                break;
+            }
+            case TYPE.STRING: {
+                c = arrayUtil.map(ciphertext.split(""), function (item) {
+                    return item.charCodeAt(0);
+                });
+                break;
+            }
+            case TYPE.RAW: {
+                c = ciphertext;
+                break;
+            }
+            default: {
+                c = base64.decode(ciphertext);
+                break;
+            }
         }
-
-        eb(o, bx);
-
-        if (isCBC) {
-          vector.left = o.left;
-          vector.right = o.right;
+        var count = c.length >> 3, pos = 0, o = {
+            left: 0,
+            right: 0,
+        }, isCBC = mode === MODE.CBC;
+        var vector = { left: iv.left || null, right: iv.right || null };
+        for (var ic = 0; ic < count; ic++) {
+            o.left =
+                (c[pos] * POW24) |
+                    (c[pos + 1] * POW16) |
+                    (c[pos + 2] * POW8) |
+                    c[pos + 3];
+            o.right =
+                (c[pos + 4] * POW24) |
+                    (c[pos + 5] * POW16) |
+                    (c[pos + 6] * POW8) |
+                    c[pos + 7];
+            if (isCBC) {
+                left = o.left;
+                right = o.right;
+            }
+            db(o, bx);
+            if (isCBC) {
+                o.left =
+                    (((o.left >> 0x10) ^ (vector.left >> 0x10)) << 0x10) |
+                        (((o.left & 0xffff) ^ (vector.left & 0xffff)) & 0xffff);
+                o.right =
+                    (((o.right >> 0x10) ^ (vector.right >> 0x10)) << 0x10) |
+                        (((o.right & 0xffff) ^ (vector.right & 0xffff)) & 0xffff);
+                vector.left = left;
+                vector.right = right;
+            }
+            pt.push((o.left >> 24) & 0xff);
+            pt.push((o.left >> 16) & 0xff);
+            pt.push((o.left >> 8) & 0xff);
+            pt.push(o.left & 0xff);
+            pt.push((o.right >> 24) & 0xff);
+            pt.push((o.right >> 16) & 0xff);
+            pt.push((o.right >> 8) & 0xff);
+            pt.push(o.right & 0xff);
+            pos += 8;
         }
-
-        cipher.push((o.left >> 24) & 0xff);
-        cipher.push((o.left >> 16) & 0xff);
-        cipher.push((o.left >> 8) & 0xff);
-        cipher.push(o.left & 0xff);
-        cipher.push((o.right >> 24) & 0xff);
-        cipher.push((o.right >> 16) & 0xff);
-        cipher.push((o.right >> 8) & 0xff);
-        cipher.push(o.right & 0xff);
-        pos += 8;
-      }
-
-      switch (out) {
-        case crypto.outputTypes.Hex: {
-          return arrayUtil
-            .map(cipher, function (item) {
-              return (item <= 0xf ? "0" : "") + item.toString(16);
-            })
-            .join("");
+        if (pt[pt.length - 1] === pt[pt.length - 2] || pt[pt.length - 1] === 0x01) {
+            var n = pt[pt.length - 1];
+            pt.splice(pt.length - n, n);
         }
-        case crypto.outputTypes.String: {
-          return cipher.join("");
-        }
-        case crypto.outputTypes.Raw: {
-          return cipher;
-        }
-        default: {
-          return base64.encode(cipher);
-        }
-      }
-    };
-
-    this.decrypt = function (ciphertext, key, ao) {
-      var ip = crypto.outputTypes.Base64;
-      var mode = crypto.cipherModes.ECB;
-      if (ao) {
-        if (ao.outputType) ip = ao.outputType;
-        if (ao.cipherMode) mode = ao.cipherMode;
-      }
-      var bx = init(key);
-      var pt = [];
-
-      var c = null;
-      switch (ip) {
-        case crypto.outputTypes.Hex: {
-          c = [];
-          for (var i = 0, l = ciphertext.length - 1; i < l; i += 2) {
-            c.push(parseInt(ciphertext.substr(i, 2), 16));
-          }
-          break;
-        }
-        case crypto.outputTypes.String: {
-          c = arrayUtil.map(ciphertext.split(""), function (item) {
-            return item.charCodeAt(0);
-          });
-          break;
-        }
-        case crypto.outputTypes.Raw: {
-          c = ciphertext;
-          break;
-        }
-        default: {
-          c = base64.decode(ciphertext);
-          break;
-        }
-      }
-
-      var count = c.length >> 3,
-        pos = 0,
-        o = {},
-        isCBC = mode === crypto.cipherModes.CBC;
-      var vector = { left: iv.left || null, right: iv.right || null };
-      for (let ic = 0; ic < count; ic++) {
-        o.left =
-          (c[pos] * POW24) |
-          (c[pos + 1] * POW16) |
-          (c[pos + 2] * POW8) |
-          c[pos + 3];
-        o.right =
-          (c[pos + 4] * POW24) |
-          (c[pos + 5] * POW16) |
-          (c[pos + 6] * POW8) |
-          c[pos + 7];
-
-        if (isCBC) {
-          var left = o.left;
-          var right = o.right;
-        }
-
-        db(o, bx);
-
-        if (isCBC) {
-          o.left =
-            (((o.left >> 0x10) ^ (vector.left >> 0x10)) << 0x10) |
-            (((o.left & 0xffff) ^ (vector.left & 0xffff)) & 0xffff);
-          o.right =
-            (((o.right >> 0x10) ^ (vector.right >> 0x10)) << 0x10) |
-            (((o.right & 0xffff) ^ (vector.right & 0xffff)) & 0xffff);
-          vector.left = left;
-          vector.right = right;
-        }
-
-        pt.push((o.left >> 24) & 0xff);
-        pt.push((o.left >> 16) & 0xff);
-        pt.push((o.left >> 8) & 0xff);
-        pt.push(o.left & 0xff);
-        pt.push((o.right >> 24) & 0xff);
-        pt.push((o.right >> 16) & 0xff);
-        pt.push((o.right >> 8) & 0xff);
-        pt.push(o.right & 0xff);
-        pos += 8;
-      }
-
-      if (
-        pt[pt.length - 1] === pt[pt.length - 2] ||
-        pt[pt.length - 1] === 0x01
-      ) {
-        var n = pt[pt.length - 1];
-        pt.splice(pt.length - n, n);
-      }
-
-      return arrayUtil
-        .map(pt, function (item) {
-          return String.fromCharCode(item);
+        return arrayUtil
+            .map(pt, function (item) {
+            return String.fromCharCode(item);
         })
-        .join("");
-    };
-
-    this.setIV("0000000000000000", crypto.outputTypes.Hex);
-  })();
-
-  if (typeof exports != "undefined") {
-    exports.blowfish = crypto.Blowfish;
-  } else {
-    global.blowfish = crypto.Blowfish;
-  }
-})(this);
+            .join("");
+    },
+};
+Blowfish.setIV("0000000000000000", TYPE.HEX);
+exports.default = Blowfish;
